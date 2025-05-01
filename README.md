@@ -1,4 +1,4 @@
-# Scribe (Software Development subject final project)
+# Scribe (Software Development subject final project) NOTE: SUBJECT TO CHANGE
 
 Scribe is a web-based story writing and sharing platform built with Flask. It allows users to create accounts, write stories, and share them with others.
 
