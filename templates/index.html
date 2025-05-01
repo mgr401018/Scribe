@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+    <h1 class="mb-4">Welcome to Scribe</h1>
+    
+    {% if stories %}
+        {% for story in stories %}
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">{{ story.title }}</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">By {{ story.author.username }}</h6>
+                    <p class="card-text">{{ story.content }}</p>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No stories yet. Be the first to write one!</p>
+    {% endif %}
+{% endblock %} 

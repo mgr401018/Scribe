@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Write Story{% endblock %}
+
+{% block content %}
+    <h1 class="mb-4">Write Your Story</h1>
+    <form method="POST">
+        <div class="mb-3">
+            <label for="title" class="form-label">Title</label>
+            <input type="text" class="form-control" id="title" name="title" required>
+        </div>
+        <div class="mb-3">
+            <label for="content" class="form-label">Story</label>
+            <textarea class="form-control" id="content" name="content" rows="10" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Publish</button>
+    </form>
+{% endblock %} 
