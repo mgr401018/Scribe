@@ -245,15 +245,14 @@ def edit_story(story_id):
         
         # Update existing chapters and collect IDs of chapters to keep
         chapters_to_keep = set()
+        
+        # First, delete all existing chapters
+        for chapter in story.chapters:
+            db.session.delete(chapter)
+        
+        # Then create new chapters with the submitted data
         for i, (chapter_id, title, content) in enumerate(zip(chapter_ids, chapter_titles, chapter_contents), 1):
-            if chapter_id:  # Existing chapter
-                chapter = Chapter.query.get(chapter_id)
-                if chapter and chapter.story_id == story.id:
-                    chapter.title = title
-                    chapter.content = content
-                    chapter.chapter_number = i
-                    chapters_to_keep.add(chapter.id)
-            else:  # New chapter
+            if title and content:  # Only create chapter if both title and content are provided
                 chapter = Chapter(
                     title=title,
                     content=content,
@@ -261,11 +260,6 @@ def edit_story(story_id):
                     story_id=story.id
                 )
                 db.session.add(chapter)
-        
-        # Remove chapters that were deleted
-        for chapter in story.chapters:
-            if chapter.id not in chapters_to_keep:
-                db.session.delete(chapter)
         
         db.session.commit()
         flash('Story updated successfully!')
