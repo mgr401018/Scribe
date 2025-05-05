@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}{{ story.title }}{% endblock %}
+
+{% block content %}
+    <div class="mb-4">
+        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Stories
+        </a>
+        {% if current_user.is_authenticated and current_user.id == story.user_id %}
+            <a href="{{ url_for('edit_story', story_id=story.id) }}" class="btn btn-outline-primary">
+                <i class="fas fa-edit"></i> Edit Story
+            </a>
+        {% endif %}
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <h1 class="card-title">{{ story.title }}</h1>
+            <h6 class="card-subtitle mb-3 text-muted">By {{ story.author.username }}</h6>
+            
+            {% if story.description %}
+                <p class="card-text text-muted mb-4">{{ story.description }}</p>
+            {% endif %}
+            
+            <div class="accordion" id="storyChapters">
+                {% for chapter in story.chapters %}
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="heading{{ chapter.id }}">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                    data-bs-target="#collapse{{ chapter.id }}" 
+                                    aria-expanded="false" aria-controls="collapse{{ chapter.id }}">
+                                Chapter {{ chapter.chapter_number }}: {{ chapter.title }}
+                            </button>
+                        </h2>
+                        <div id="collapse{{ chapter.id }}" class="accordion-collapse collapse" 
+                             aria-labelledby="heading{{ chapter.id }}" 
+                             data-bs-parent="#storyChapters">
+                            <div class="accordion-body">
+                                {{ chapter.content }}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            
+            {% if current_user.is_authenticated %}
+                <div class="btn-group mt-4" role="group">
+                    <a href="{{ url_for('download_story', story_id=story.id, format='pdf') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-file-pdf"></i> Download PDF
+                    </a>
+                    <a href="{{ url_for('download_story', story_id=story.id, format='epub') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-book"></i> Download EPUB
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %} 

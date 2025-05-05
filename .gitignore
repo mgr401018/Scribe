@@ -1,2 +1,7 @@
-/__pycache__
-/migrations
+__pycache__/
+*.pyc
+instance/
+.env
+*.sqlite3
+*.db
+migrations/__pycache__/
