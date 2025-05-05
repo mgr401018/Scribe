@@ -1,38 +1,48 @@
 {% extends "base.html" %}
 
-{% block title %}Write Story{% endblock %}
+{% block title %}Edit Story{% endblock %}
 
 {% block content %}
-    <h1 class="mb-4">Write Your Story</h1>
+    <div class="mb-4">
+        <a href="{{ url_for('view_story', story_id=story.id) }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Story
+        </a>
+    </div>
+
+    <h1 class="mb-4">Edit Story</h1>
     <form method="POST" id="storyForm">
         <div class="mb-3">
             <label for="title" class="form-label">Story Title</label>
-            <input type="text" class="form-control" id="title" name="title" required>
+            <input type="text" class="form-control" id="title" name="title" value="{{ story.title }}" required>
         </div>
         <div class="mb-3">
             <label for="description" class="form-label">Story Description</label>
-            <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+            <textarea class="form-control" id="description" name="description" rows="3">{{ story.description }}</textarea>
         </div>
         
         <div id="chapters">
             <h3 class="mb-3">Chapters</h3>
-            <div class="chapter mb-4">
-                <div class="mb-3">
-                    <label class="form-label">Chapter 1 Title</label>
-                    <input type="text" class="form-control" name="chapter_title[]" required>
+            {% for chapter in story.chapters %}
+                <div class="chapter mb-4">
+                    <div class="mb-3">
+                        <label class="form-label">Chapter {{ chapter.chapter_number }} Title</label>
+                        <input type="text" class="form-control" name="chapter_title[]" value="{{ chapter.title }}" required>
+                        <input type="hidden" name="chapter_id[]" value="{{ chapter.id }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Chapter {{ chapter.chapter_number }} Content</label>
+                        <textarea class="form-control" name="chapter_content[]" rows="10" required>{{ chapter.content }}</textarea>
+                    </div>
+                    <button type="button" class="btn btn-danger btn-sm mb-3" onclick="this.parentElement.remove()">Remove Chapter</button>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label">Chapter 1 Content</label>
-                    <textarea class="form-control" name="chapter_content[]" rows="10" required></textarea>
-                </div>
-            </div>
+            {% endfor %}
         </div>
         
         <div class="mb-3">
             <button type="button" class="btn btn-secondary" onclick="addChapter()">Add Chapter</button>
         </div>
         
-        <button type="submit" class="btn btn-primary">Publish Story</button>
+        <button type="submit" class="btn btn-primary">Save Changes</button>
     </form>
 
     <script>
@@ -46,6 +56,7 @@
                 <div class="mb-3">
                     <label class="form-label">Chapter ${chapterCount} Title</label>
                     <input type="text" class="form-control" name="chapter_title[]" required>
+                    <input type="hidden" name="chapter_id[]" value="">
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Chapter ${chapterCount} Content</label>

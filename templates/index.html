@@ -6,15 +6,20 @@
     <h1 class="mb-4">Welcome to Scribe</h1>
     
     {% if stories %}
-        {% for story in stories %}
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h5 class="card-title">{{ story.title }}</h5>
-                    <h6 class="card-subtitle mb-2 text-muted">By {{ story.author.username }}</h6>
-                    <p class="card-text">{{ story.content }}</p>
-                </div>
-            </div>
-        {% endfor %}
+        <div class="list-group">
+            {% for story in stories %}
+                <a href="{{ url_for('view_story', story_id=story.id) }}" class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1">{{ story.title }}</h5>
+                        <small class="text-muted">{{ story.chapters|length }} chapter{{ 's' if story.chapters|length != 1 else '' }}</small>
+                    </div>
+                    <p class="mb-1 text-muted">By {{ story.author.username }}</p>
+                    {% if story.description %}
+                        <small class="text-muted">{{ story.description[:150] }}{% if story.description|length > 150 %}...{% endif %}</small>
+                    {% endif %}
+                </a>
+            {% endfor %}
+        </div>
     {% else %}
         <p>No stories yet. Be the first to write one!</p>
     {% endif %}

@@ -1,4 +1,4 @@
-# Scribe (Software Development subject final project) NOTE: SUBJECT TO CHANGE
+# Scribe ("Software Development" subject final project) NOTE: SUBJECT TO CHANGE
 
 Scribe is a web-based story writing and sharing platform built with Flask. It allows users to create accounts, write stories, and share them with others.
 
@@ -10,6 +10,8 @@ Scribe is a web-based story writing and sharing platform built with Flask. It al
 - Secure password hashing
 - PostgreSQL database integration
 - Docker support for easy deployment
+- Download stories as PDF or EPUB
+- Chapter support for stories & story editing
 
 ## Prerequisites
 
@@ -59,7 +61,12 @@ export SECRET_KEY='your-secret-key'
 export DATABASE_URL='postgresql://username:password@localhost:5432/scribe'
 ```
 
-5. Run the application:
+5. Run the database migration:
+```bash
+flask db upgrade
+```
+
+6. Run the application:
 ```bash
 python app.py
 ```
