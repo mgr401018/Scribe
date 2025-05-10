@@ -38,7 +38,7 @@ class Tag(db.Model):
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
-    password_hash = db.Column(db.String(128))
+    password_hash = db.Column(db.String(512))
     stories = db.relationship('Story', backref='author', lazy=True)
 
 class Story(db.Model):
