@@ -17,7 +17,23 @@
     <div class="card">
         <div class="card-body">
             <h1 class="card-title">{{ story.title }}</h1>
-            <h6 class="card-subtitle mb-3 text-muted">By {{ story.author.username }}</h6>
+            <h6 class="card-subtitle mb-2 text-muted">By {{ story.author.username }}</h6>
+            <div class="text-muted mb-3">
+                <small>
+                    <span class="me-3">{{ story.chapters|length }} chapter{{ 's' if story.chapters|length != 1 else '' }}</span>
+                    <span>{{ story.word_count }} words</span>
+                </small>
+            </div>
+            
+            {% if story.tags %}
+                <div class="mb-3">
+                    {% for tag in story.tags %}
+                        <a href="{{ url_for('index', search='tags:"' + tag.name + '"') }}" class="badge bg-secondary text-decoration-none me-1">
+                            {{ tag.name }}
+                        </a>
+                    {% endfor %}
+                </div>
+            {% endif %}
             
             {% if story.description %}
                 <p class="card-text text-muted mb-4">{{ story.description }}</p>

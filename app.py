@@ -12,6 +12,7 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from ebooklib import epub
 import io
 import tempfile
+import re
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev')
@@ -22,6 +23,17 @@ db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
+
+# Association table for Story-Tag many-to-many relationship
+story_tags = db.Table('story_tags',
+    db.Column('story_id', db.Integer, db.ForeignKey('story.id'), primary_key=True),
+    db.Column('tag_id', db.Integer, db.ForeignKey('tag.id'), primary_key=True)
+)
+
+class Tag(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), unique=True, nullable=False)
+    stories = db.relationship('Story', secondary=story_tags, backref=db.backref('tags', lazy=True))
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -35,6 +47,13 @@ class Story(db.Model):
     description = db.Column(db.Text, nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     chapters = db.relationship('Chapter', backref='story', lazy=True, order_by='Chapter.chapter_number')
+
+    @property
+    def word_count(self):
+        total_words = 0
+        for chapter in self.chapters:
+            total_words += len(chapter.content.split())
+        return total_words
 
 class Chapter(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -51,9 +70,87 @@ def load_user(user_id):
 with app.app_context():
     db.create_all()
 
+def clean_tag(tag):
+    # Remove special characters and convert to lowercase
+    return re.sub(r'[^a-zA-Z0-9\s-]', '', tag).strip().lower()
+
 @app.route('/')
 def index():
-    stories = Story.query.order_by(Story.id.desc()).all()
+    search_query = request.args.get('search', '')
+    if search_query:
+        query = Story.query
+        
+        # Handle multiple search modifiers
+        title_query = None
+        author_query = None
+        tag_queries = []
+        
+        # Extract title search if present
+        if 'title:' in search_query:
+            title_part = search_query.split('title:', 1)[1]
+            # Find the next modifier or end of string
+            next_modifier = min(
+                [i for i in [title_part.find(' by:'), title_part.find(' tags:'), len(title_part)] if i != -1]
+            )
+            title_part = title_part[:next_modifier].strip()
+            
+            if title_part.startswith('"'):
+                end_quote = title_part.find('"', 1)
+                if end_quote != -1:
+                    title_query = title_part[1:end_quote]
+            else:
+                title_query = title_part.split()[0]
+        
+        # Extract author search if present
+        if 'by:' in search_query:
+            author_part = search_query.split('by:', 1)[1]
+            # Find the next modifier or end of string
+            next_modifier = min(
+                [i for i in [author_part.find(' title:'), author_part.find(' tags:'), len(author_part)] if i != -1]
+            )
+            author_part = author_part[:next_modifier].strip()
+            
+            if author_part.startswith('"'):
+                end_quote = author_part.find('"', 1)
+                if end_quote != -1:
+                    author_query = author_part[1:end_quote]
+            else:
+                author_query = author_part.split()[0]
+        
+        # Extract tag search if present
+        if 'tags:' in search_query:
+            tag_part = search_query.split('tags:', 1)[1].strip()
+            if tag_part.startswith('"'):
+                end_quote = tag_part.find('"', 1)
+                if end_quote != -1:
+                    tag_part = tag_part[1:end_quote]
+            
+            # Split tags by comma and clean each tag
+            tag_queries = [clean_tag(tag) for tag in tag_part.split(',') if tag.strip()]
+        
+        # Apply filters
+        if title_query:
+            query = query.filter(Story.title.ilike(f'%{title_query}%'))
+        if author_query:
+            query = query.join(User).filter(User.username.ilike(f'%{author_query}%'))
+        if tag_queries:
+            # For each tag, create a subquery to find stories with that tag
+            for tag_query in tag_queries:
+                # Create a subquery for stories with this tag - using exact match
+                tag_subquery = db.session.query(story_tags.c.story_id).join(Tag).filter(Tag.name == tag_query).subquery()
+                # Filter the main query to only include stories that have this tag
+                query = query.filter(Story.id.in_(tag_subquery))
+        
+        # If no modifiers were used, search in both title and description
+        if not title_query and not author_query and not tag_queries:
+            query = query.filter(
+                (Story.title.ilike(f'%{search_query}%')) |
+                (Story.description.ilike(f'%{search_query}%'))
+            )
+        
+        stories = query.order_by(Story.id.desc()).all()
+    else:
+        stories = Story.query.order_by(Story.id.desc()).all()
     return render_template('index.html', stories=stories)
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -101,10 +198,21 @@ def write():
         description = request.form.get('description')
         chapter_titles = request.form.getlist('chapter_title[]')
         chapter_contents = request.form.getlist('chapter_content[]')
+        tags = request.form.get('tags', '').split(',')
         
         story = Story(title=title, description=description, user_id=current_user.id)
         db.session.add(story)
         db.session.flush()  # Get the story ID
+        
+        # Add tags (limited to 10)
+        for tag_name in tags[:10]:
+            tag_name = clean_tag(tag_name)
+            if tag_name:
+                tag = Tag.query.filter_by(name=tag_name).first()
+                if not tag:
+                    tag = Tag(name=tag_name)
+                    db.session.add(tag)
+                story.tags.append(tag)
         
         for i, (chapter_title, chapter_content) in enumerate(zip(chapter_titles, chapter_contents), 1):
             if chapter_title and chapter_content:  # Only add non-empty chapters
@@ -130,6 +238,22 @@ def download_story(story_id, format):
         buffer = io.BytesIO()
         doc = SimpleDocTemplate(buffer, pagesize=letter)
         styles = getSampleStyleSheet()
+        
+        # Create custom styles
+        title_style = ParagraphStyle(
+            'TitleStyle',
+            parent=styles['Title'],
+            fontSize=24,
+            alignment=1,  # Center alignment
+            spaceAfter=12
+        )
+        author_style = ParagraphStyle(
+            'AuthorStyle',
+            parent=styles['Normal'],
+            fontSize=16,
+            alignment=1,  # Center alignment
+            spaceAfter=24
+        )
         story_style = ParagraphStyle(
             'StoryStyle',
             parent=styles['Normal'],
@@ -139,19 +263,44 @@ def download_story(story_id, format):
         
         # Create the content
         content = []
-        content.append(Paragraph(story.title, styles['Title']))
-        content.append(Spacer(1, 12))
-        content.append(Paragraph(f"By {story.author.username}", styles['Normal']))
-        if story.description:
+        
+        # Add title page
+        content.append(Paragraph(story.title, title_style))
+        content.append(Paragraph(f"by {story.author.username}", author_style))
+        content.append(Spacer(1, 48))  # Add extra space after title page
+        
+        # Add story information section
+        content.append(Paragraph("Story Information", styles['Title']))
+        content.append(Spacer(1, 24))
+        
+        # Tags
+        if story.tags:
+            content.append(Paragraph("Tags:", styles['Heading2']))
+            content.append(Paragraph(", ".join(tag.name for tag in story.tags), styles['Normal']))
             content.append(Spacer(1, 12))
+        
+        # Description
+        if story.description:
+            content.append(Paragraph("Description:", styles['Heading2']))
             content.append(Paragraph(story.description, styles['Normal']))
+            content.append(Spacer(1, 12))
+        
+        # Statistics
+        content.append(Paragraph("Statistics:", styles['Heading2']))
+        content.append(Paragraph(f"Chapters: {len(story.chapters)}", styles['Normal']))
+        content.append(Paragraph(f"Word Count: {story.word_count}", styles['Normal']))
+        content.append(Spacer(1, 24))
+        
+        # Add a page break
+        content.append(Paragraph("Story Content", styles['Title']))
+        content.append(Spacer(1, 24))
         
         # Add chapters
         for chapter in story.chapters:
-            content.append(Spacer(1, 24))
             content.append(Paragraph(f"Chapter {chapter.chapter_number}: {chapter.title}", styles['Heading1']))
             content.append(Spacer(1, 12))
             content.append(Paragraph(chapter.content, story_style))
+            content.append(Spacer(1, 24))
         
         # Build the PDF
         doc.build(content)
@@ -174,6 +323,50 @@ def download_story(story_id, format):
         book.set_language('en')
         book.add_author(story.author.username)
         
+        # Add tags to metadata
+        if story.tags:
+            book.add_metadata('DC', 'subject', ', '.join(tag.name for tag in story.tags))
+        
+        # Create title page
+        title_page = epub.EpubHtml(
+            title='Title Page',
+            file_name='title.xhtml'
+        )
+        
+        # Create title page content
+        title_content = f'''
+        <div class="title-page">
+            <h1 class="title">{story.title}</h1>
+            <h2 class="author">by {story.author.username}</h2>
+        </div>
+        '''
+        title_page.content = title_content
+        book.add_item(title_page)
+        
+        # Create metadata chapter
+        metadata_chapter = epub.EpubHtml(
+            title='Story Information',
+            file_name='metadata.xhtml'
+        )
+        
+        # Create metadata content
+        metadata_content = f'''
+        <h1>Story Information</h1>
+        <div class="metadata">
+            <h2>Tags</h2>
+            <p>{", ".join(tag.name for tag in story.tags) if story.tags else "No tags"}</p>
+            
+            <h2>Description</h2>
+            <p>{story.description if story.description else "No description"}</p>
+            
+            <h2>Statistics</h2>
+            <p>Chapters: {len(story.chapters)}</p>
+            <p>Word Count: {story.word_count}</p>
+        </div>
+        '''
+        metadata_chapter.content = metadata_content
+        book.add_item(metadata_chapter)
+        
         # Create chapters
         chapters = []
         for chapter in story.chapters:
@@ -186,8 +379,13 @@ def download_story(story_id, format):
             chapters.append(chapter_file)
         
         # Create table of contents
-        book.toc = [(epub.Link(f'chapter_{i+1}.xhtml', chapter.title, f'chapter_{i+1}')) 
-                   for i, chapter in enumerate(story.chapters)]
+        book.toc = [
+            epub.Link('title.xhtml', 'Title Page', 'title'),
+            epub.Link('metadata.xhtml', 'Story Information', 'metadata'),
+            (epub.Section('Chapters'),
+             [epub.Link(f'chapter_{i+1}.xhtml', chapter.title, f'chapter_{i+1}') 
+              for i, chapter in enumerate(story.chapters)])
+        ]
         
         # Add default NCX and Nav files
         book.add_item(epub.EpubNcx())
@@ -198,12 +396,35 @@ def download_story(story_id, format):
         body {
             font-family: Cambria, Liberation Serif, Bitstream Vera Serif, Georgia, Times, Times New Roman, serif;
         }
+        .title-page {
+            text-align: center;
+            margin: 4em 0;
+        }
+        .title-page .title {
+            font-size: 2em;
+            margin-bottom: 0.5em;
+        }
+        .title-page .author {
+            font-size: 1.5em;
+            color: #666;
+        }
+        .metadata {
+            margin: 2em 0;
+        }
+        .metadata h2 {
+            color: #666;
+            margin-top: 1em;
+            margin-bottom: 0.5em;
+        }
+        .metadata p {
+            margin: 0 0 1em 0;
+        }
         '''
         nav_css = epub.EpubItem(uid="style_nav", file_name="style/nav.css", media_type="text/css", content=style)
         book.add_item(nav_css)
         
         # Create spine
-        book.spine = ['nav'] + chapters
+        book.spine = ['nav', title_page, metadata_chapter] + chapters
         
         # Create EPUB file
         epub_path = os.path.join(tempfile.gettempdir(), f"{story.title}.epub")
@@ -238,13 +459,22 @@ def edit_story(story_id):
         story.title = request.form.get('title')
         story.description = request.form.get('description')
         
+        # Update tags
+        story.tags = []  # Clear existing tags
+        tags = request.form.get('tags', '').split(',')
+        for tag_name in tags[:10]:  # Limit to 10 tags
+            tag_name = clean_tag(tag_name)
+            if tag_name:
+                tag = Tag.query.filter_by(name=tag_name).first()
+                if not tag:
+                    tag = Tag(name=tag_name)
+                    db.session.add(tag)
+                story.tags.append(tag)
+        
         # Get chapter data from form
         chapter_ids = request.form.getlist('chapter_id[]')
         chapter_titles = request.form.getlist('chapter_title[]')
         chapter_contents = request.form.getlist('chapter_content[]')
-        
-        # Update existing chapters and collect IDs of chapters to keep
-        chapters_to_keep = set()
         
         # First, delete all existing chapters
         for chapter in story.chapters:

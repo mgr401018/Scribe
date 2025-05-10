@@ -5,19 +5,117 @@
 {% block content %}
     <h1 class="mb-4">Welcome to Scribe</h1>
     
+    <form method="GET" action="{{ url_for('index') }}" class="mb-4">
+        <div class="input-group">
+            <input type="text" name="search" class="form-control" placeholder='Search stories... (e.g., title:"title1" by:"user1" tags:"fantasy, adventure")' value="{{ request.args.get('search', '') }}">
+            <button type="submit" class="btn btn-primary">Search</button>
+            {% if request.args.get('search') %}
+                <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">Clear</a>
+            {% endif %}
+        </div>
+        <small class="text-muted mt-1 d-block">
+            Search modifiers: <code>title:"your title"</code> to search titles, <code>by:"author name"</code> to search by author, <code>tags:"tag1, tag2"</code> to search by multiple tags. You can combine them: <code>title:"title1" by:"user1" tags:"fantasy, adventure"</code>
+        </small>
+    </form>
+    
+    <style>
+        .search-help {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .search-help h4 {
+            margin-top: 0;
+            color: #495057;
+        }
+        .search-help ul {
+            margin-bottom: 0;
+            padding-left: 20px;
+        }
+        .search-help li {
+            margin-bottom: 5px;
+        }
+        .search-help code {
+            background-color: #e9ecef;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        .story-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .story-card h2 {
+            margin: 0 0 10px 0;
+            font-size: 1.5rem;
+        }
+        .story-card h2 a {
+            color: #2c3e50;
+            text-decoration: none;
+        }
+        .story-card h2 a:hover {
+            color: #3498db;
+        }
+        .story-card .author {
+            color: #666;
+            margin: 0 0 10px 0;
+            font-size: 0.9rem;
+        }
+        .story-card .description {
+            color: #666;
+            margin: 10px 0;
+            font-size: 0.95rem;
+        }
+        .story-card .story-meta {
+            display: flex;
+            gap: 15px;
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+        .story-card .tags {
+            margin: 10px 0;
+        }
+        .story-card .tag {
+            display: inline-block;
+            background: #e9ecef;
+            color: #495057;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        .story-card .tag:hover {
+            background: #dee2e6;
+            color: #212529;
+        }
+    </style>
+    
     {% if stories %}
         <div class="list-group">
         {% for story in stories %}
-                <a href="{{ url_for('view_story', story_id=story.id) }}" class="list-group-item list-group-item-action">
-                    <div class="d-flex w-100 justify-content-between">
-                        <h5 class="mb-1">{{ story.title }}</h5>
-                        <small class="text-muted">{{ story.chapters|length }} chapter{{ 's' if story.chapters|length != 1 else '' }}</small>
-                </div>
-                    <p class="mb-1 text-muted">By {{ story.author.username }}</p>
-                    {% if story.description %}
-                        <small class="text-muted">{{ story.description[:150] }}{% if story.description|length > 150 %}...{% endif %}</small>
+                <div class="story-card">
+                    <h2><a href="{{ url_for('view_story', story_id=story.id) }}">{{ story.title }}</a></h2>
+                    <p class="author">by {{ story.author.username }}</p>
+                    {% if story.tags %}
+                    <div class="tags">
+                        {% for tag in story.tags %}
+                        <a href="{{ url_for('index', search='tags:' + tag.name) }}" class="tag">{{ tag.name }}</a>
+                        {% endfor %}
+                    </div>
                     {% endif %}
-                </a>
+                    <p class="description">{{ story.description }}</p>
+                    <div class="story-meta">
+                        <span class="chapters">{{ story.chapters|length }} chapter{% if story.chapters|length != 1 %}s{% endif %}</span>
+                        <span class="word-count">{{ story.word_count }} words</span>
+                    </div>
+                </div>
             {% endfor %}
             </div>
     {% else %}

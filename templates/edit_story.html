@@ -20,6 +20,14 @@
             <textarea class="form-control" id="description" name="description" rows="3">{{ story.description }}</textarea>
         </div>
         
+        <div class="mb-3">
+            <label for="tags" class="form-label">Tags (comma-separated, max 10)</label>
+            <input type="text" class="form-control" id="tags" name="tags" 
+                   value="{{ story.tags|map(attribute='name')|join(', ') }}"
+                   placeholder="adventure, fantasy, mystery">
+            <div class="form-text">Add up to 10 tags separated by commas</div>
+        </div>
+        
         <div id="chapters">
             <h3 class="mb-3">Chapters</h3>
             {% for chapter in story.chapters %}
