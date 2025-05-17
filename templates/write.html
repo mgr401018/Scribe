@@ -4,11 +4,22 @@
 
 {% block content %}
     <h1 class="mb-4">Write Your Story</h1>
-    <form method="POST" id="storyForm">
+    <form method="POST" id="storyForm" enctype="multipart/form-data">
         <div class="mb-3">
             <label for="title" class="form-label">Story Title</label>
             <input type="text" class="form-control" id="title" name="title" required>
         </div>
+
+        <div class="mb-3">
+            <label for="cover" class="form-label">Cover Image</label>
+            <input type="file" class="form-control" id="cover" name="cover" accept="image/*" onchange="previewCover(event)">
+            <div class="form-text">Upload a cover image (recommended size: 800x512 pixels)</div>
+            <div id="coverPreview" class="mt-2" style="display: none;">
+                <img id="previewImg" src="" alt="Cover Preview" style="max-width: 200px; max-height: 128px; object-fit: cover;">
+                <button type="button" class="btn btn-danger btn-sm ms-2" onclick="removeCover()">Remove</button>
+            </div>
+        </div>
+
         <div class="mb-3">
             <label for="description" class="form-label">Description</label>
             <textarea class="form-control" id="description" name="description" rows="3"></textarea>
@@ -61,6 +72,27 @@
             `;
             
             chaptersDiv.appendChild(chapterDiv);
+        }
+
+        function previewCover(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('coverPreview');
+                    const img = document.getElementById('previewImg');
+                    img.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function removeCover() {
+            const input = document.getElementById('cover');
+            const preview = document.getElementById('coverPreview');
+            input.value = '';
+            preview.style.display = 'none';
         }
     </script>
 {% endblock %} 

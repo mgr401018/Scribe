@@ -18,6 +18,12 @@ Scribe is a web-based story writing and sharing platform built with Flask. It al
   - Search by author: `by:"author name"`
   - Search by tags: `tags:"tag1, tag2"`
   - Combine search modifiers: `title:"title1" by:"user1" tags:"fantasy, adventure"`
+- User Profiles and Statistics
+- Story Ratings
+- Story Covers
+- Search Filters
+- "Uploaded" and "Last Updated" dates
+- User Library and Story Saving
 
 ## Prerequisites
 

@@ -3,10 +3,30 @@
 {% block title %}{{ story.title }}{% endblock %}
 
 {% block content %}
+    <style>
+        .badge:hover {
+            color: #ffc107 !important;
+        }
+    </style>
     <div class="mb-4">
         <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
             <i class="fas fa-arrow-left"></i> Back to Stories
         </a>
+        {% if current_user.is_authenticated %}
+            {% if current_user.id == story.user_id %}
+                <a href="{{ url_for('profile') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-user"></i> View Your Profile
+                </a>
+            {% else %}
+                <a href="{{ url_for('view_author', user_id=story.author.id) }}" class="btn btn-outline-primary">
+                    <i class="fas fa-user"></i> View Author
+                </a>
+            {% endif %}
+        {% else %}
+            <a href="{{ url_for('view_author', user_id=story.author.id) }}" class="btn btn-outline-primary">
+                <i class="fas fa-user"></i> View Author
+            </a>
+        {% endif %}
         {% if current_user.is_authenticated and current_user.id == story.user_id %}
             <a href="{{ url_for('edit_story', story_id=story.id) }}" class="btn btn-outline-primary">
                 <i class="fas fa-edit"></i> Edit Story
@@ -16,28 +36,99 @@
 
     <div class="card">
         <div class="card-body">
-            <h1 class="card-title">{{ story.title }}</h1>
-            <h6 class="card-subtitle mb-2 text-muted">By {{ story.author.username }}</h6>
-            <div class="text-muted mb-3">
-                <small>
-                    <span class="me-3">{{ story.chapters|length }} chapter{{ 's' if story.chapters|length != 1 else '' }}</span>
-                    <span>{{ story.word_count }} words</span>
-                </small>
-            </div>
-            
-            {% if story.tags %}
-                <div class="mb-3">
-                    {% for tag in story.tags %}
-                        <a href="{{ url_for('index', search='tags:"' + tag.name + '"') }}" class="badge bg-secondary text-decoration-none me-1">
-                            {{ tag.name }}
-                        </a>
-                    {% endfor %}
+            <div class="row">
+                <div class="col" id="metadata-column">
+                    <h1 class="card-title">{{ story.title }}</h1>
+                    <h6 class="card-subtitle mb-2 text-muted">By {{ story.author.username }}</h6>
+                    <div class="story-meta">
+                        <span class="meta-item text-muted">
+                            <i class="fas fa-book-open"></i>
+                            {{ story.chapters|length }} chapter{% if story.chapters|length != 1 %}s{% endif %}
+                        </span>
+                        <span class="meta-item text-muted">
+                            <i class="fas fa-file-alt"></i>
+                            {{ story.word_count }} words
+                        </span>
+                        {% if story.ratings %}
+                        <span class="meta-item">
+                            <i class="fas fa-star text-warning"></i>
+                            {{ "%.1f"|format(story.average_rating) }}
+                        </span>
+                        {% endif %}
+                    </div>
+                    <div class="story-meta text-muted mt-2">
+                        <span class="meta-item">
+                            <i class="fas fa-calendar-plus"></i>
+                            Published: {{ story.created_at.strftime('%Y-%m-%d %H:%M') }}
+                        </span>
+                        <span class="meta-item">
+                            <i class="fas fa-clock"></i>
+                            Last updated: {{ story.last_updated.strftime('%Y-%m-%d %H:%M') }}
+                        </span>
+                    </div>
+                    
+                    {% if story.tags %}
+                        <div class="mb-3">
+                            {% for tag in story.tags %}
+                                <a href="{{ url_for('index', search='tags:"' + tag.name + '"') }}" class="badge bg-secondary text-decoration-none me-1">
+                                    {{ tag.name }}
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    {% if current_user.is_authenticated %}
+                    <div class="mb-3">
+                        <div class="d-inline">
+                            <form action="{{ url_for('save_story', story_id=story.id) }}" method="POST" class="d-inline me-3">
+                                <button type="submit" class="btn btn-outline-primary">
+                                    <i class="fas fa-bookmark"></i>
+                                    {% if story in current_user.saved_stories|map(attribute='story')|list %}
+                                        Remove from Library
+                                    {% else %}
+                                        Save to Library
+                                    {% endif %}
+                                </button>
+                            </form>
+                            <form action="{{ url_for('rate_story', story_id=story.id) }}" method="POST" class="d-inline">
+                                <div class="btn-group" role="group">
+                                    {% for i in range(1, 6) %}
+                                        <input type="radio" class="btn-check" name="rating" id="rating{{ i }}" value="{{ i }}" 
+                                               {% if current_user_rating and current_user_rating.value == i %}checked{% endif %}>
+                                        <label class="btn btn-outline-warning" for="rating{{ i }}">
+                                            <i class="fas fa-star"></i>
+                                        </label>
+                                    {% endfor %}
+                                </div>
+                                <button type="submit" class="btn btn-sm btn-primary ms-2">Rate</button>
+                            </form>
+                            {% if current_user_rating %}
+                            <form action="{{ url_for('remove_rating', story_id=story.id) }}" method="POST" class="d-inline ms-2">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-times"></i> Remove Rating
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if story.description %}
+                        <p class="card-text text-muted mb-4">{{ story.description }}</p>
+                    {% endif %}
                 </div>
-            {% endif %}
-            
-            {% if story.description %}
-                <p class="card-text text-muted mb-4">{{ story.description }}</p>
-            {% endif %}
+
+                {% if story.cover_image %}
+                <div class="col-md-2 mb-4">
+                    <div class="position-relative" id="cover-container">
+                        <img src="{{ url_for('static', filename=story.cover_image) }}" alt="{{ story.title }} cover" class="img-fluid rounded" style="max-width: 100%; height: auto;">
+                        <button type="button" class="btn btn-sm btn-outline-primary position-absolute bottom-0 end-0 m-2" onclick="showFullCover()">
+                            <i class="fas fa-expand"></i> View Full
+                        </button>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
             
             <div class="accordion" id="storyChapters">
                 {% for chapter in story.chapters %}
@@ -72,4 +163,46 @@
             {% endif %}
         </div>
     </div>
+
+    <!-- Full Cover Modal -->
+    {% if story.cover_image %}
+    <div class="modal fade" id="fullCoverModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body p-0">
+                    <button type="button" class="btn-close position-absolute top-0 end-0 m-2" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <img src="{{ url_for('static', filename=story.cover_image) }}" alt="{{ story.title }} cover" class="img-fluid">
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <script>
+        function showFullCover() {
+            new bootstrap.Modal(document.getElementById('fullCoverModal')).show();
+        }
+
+        function adjustCoverHeight() {
+            const metadataColumn = document.getElementById('metadata-column');
+            const coverContainer = document.getElementById('cover-container');
+            if (metadataColumn && coverContainer) {
+                const metadataHeight = metadataColumn.offsetHeight;
+                const maxHeight = 300; // Reduced maximum height
+                const coverImg = coverContainer.querySelector('img');
+                if (coverImg) {
+                    const aspectRatio = 800 / 512; // Original cover aspect ratio
+                    const targetHeight = Math.min(metadataHeight, maxHeight);
+                    const targetWidth = targetHeight / aspectRatio;
+                    coverImg.style.width = `${targetWidth}px`;
+                    coverImg.style.height = `${targetHeight}px`;
+                    coverImg.style.objectFit = 'cover';
+                }
+            }
+        }
+
+        // Adjust on load and window resize
+        window.addEventListener('load', adjustCoverHeight);
+        window.addEventListener('resize', adjustCoverHeight);
+    </script>
 {% endblock %} 

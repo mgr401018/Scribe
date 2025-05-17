@@ -9,71 +9,148 @@
         </a>
     </div>
 
-    <h1 class="mb-4">Edit Story</h1>
-    <form method="POST" id="storyForm">
-        <div class="mb-3">
-            <label for="title" class="form-label">Story Title</label>
-            <input type="text" class="form-control" id="title" name="title" value="{{ story.title }}" required>
-        </div>
-        <div class="mb-3">
-            <label for="description" class="form-label">Story Description</label>
-            <textarea class="form-control" id="description" name="description" rows="3">{{ story.description }}</textarea>
-        </div>
-        
-        <div class="mb-3">
-            <label for="tags" class="form-label">Tags (comma-separated, max 10)</label>
-            <input type="text" class="form-control" id="tags" name="tags" 
-                   value="{{ story.tags|map(attribute='name')|join(', ') }}"
-                   placeholder="adventure, fantasy, mystery">
-            <div class="form-text">Add up to 10 tags separated by commas</div>
-        </div>
-        
-        <div id="chapters">
-            <h3 class="mb-3">Chapters</h3>
-            {% for chapter in story.chapters %}
-                <div class="chapter mb-4">
-                    <div class="mb-3">
-                        <label class="form-label">Chapter {{ chapter.chapter_number }} Title</label>
-                        <input type="text" class="form-control" name="chapter_title[]" value="{{ chapter.title }}" required>
-                        <input type="hidden" name="chapter_id[]" value="{{ chapter.id }}">
+    <div class="card">
+        <div class="card-body">
+            <h1 class="card-title mb-4">Edit Story</h1>
+            
+            <form method="POST" enctype="multipart/form-data">
+                <div class="row mb-4">
+                    <div class="col-md-8">
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Title</label>
+                            <input type="text" class="form-control" id="title" name="title" value="{{ story.title }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="3">{{ story.description }}</textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="tags" class="form-label">Tags (comma-separated, max 10)</label>
+                            <input type="text" class="form-control" id="tags" name="tags" value="{{ story.tags|map(attribute='name')|join(', ') }}">
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Chapter {{ chapter.chapter_number }} Content</label>
-                        <textarea class="form-control" name="chapter_content[]" rows="10" required>{{ chapter.content }}</textarea>
+                    
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label">Cover Image</label>
+                            {% if story.cover_image %}
+                            <div class="mb-2">
+                                <img src="{{ url_for('static', filename=story.cover_image) }}" alt="Current cover" class="img-fluid rounded mb-2" style="max-width: 128px; height: auto;">
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeCover()">
+                                        <i class="fas fa-trash"></i> Remove Cover
+                                    </button>
+                                </div>
+                            </div>
+                            {% endif %}
+                            <input type="file" class="form-control" name="cover_image" accept=".png,.jpg,.jpeg,.gif">
+                            <input type="hidden" name="remove_cover" id="remove_cover" value="0">
+                            <small class="text-muted">Cover will be cropped to 512x800px. Allowed formats: PNG, JPG, JPEG, GIF (max 16MB)</small>
+                        </div>
                     </div>
-                    <button type="button" class="btn btn-danger btn-sm mb-3" onclick="this.parentElement.remove()">Remove Chapter</button>
                 </div>
-            {% endfor %}
+
+                <div class="mb-4">
+                    <h3>Chapters</h3>
+                    <div id="chapters">
+                        {% for chapter in story.chapters %}
+                        <div class="chapter mb-3">
+                            <input type="hidden" name="chapter_id[]" value="{{ chapter.id }}">
+                            <div class="mb-2">
+                                <label class="form-label">Chapter Title</label>
+                                <input type="text" class="form-control" name="chapter_title[]" value="{{ chapter.title }}" required>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Content</label>
+                                <textarea class="form-control" name="chapter_content[]" rows="10" required>{{ chapter.content }}</textarea>
+                            </div>
+                            <button type="button" class="btn btn-outline-danger btn-sm remove-chapter">
+                                <i class="fas fa-trash"></i> Remove Chapter
+                            </button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <button type="button" class="btn btn-outline-primary" id="add-chapter">
+                        <i class="fas fa-plus"></i> Add Chapter
+                    </button>
+                </div>
+
+                <div class="mb-3">
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <a href="{{ url_for('view_story', story_id=story.id) }}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
         </div>
-        
-        <div class="mb-3">
-            <button type="button" class="btn btn-secondary" onclick="addChapter()">Add Chapter</button>
+    </div>
+
+    <hr class="my-4">
+    
+    <div class="mb-3">
+        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+            <i class="fas fa-trash"></i> Delete Story
+        </button>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModalLabel">Confirm Delete</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete "{{ story.title }}"? This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <form action="{{ url_for('delete_story', story_id=story.id) }}" method="POST" class="d-inline">
+                        <button type="submit" class="btn btn-danger">Delete Story</button>
+                    </form>
+                </div>
+            </div>
         </div>
-        
-        <button type="submit" class="btn btn-primary">Save Changes</button>
-    </form>
+    </div>
 
     <script>
-        function addChapter() {
+        function removeCover() {
+            if (confirm('Are you sure you want to remove the cover image?')) {
+                document.getElementById('remove_cover').value = '1';
+                const coverContainer = document.querySelector('.col-md-4 .mb-2');
+                if (coverContainer) {
+                    coverContainer.remove();
+                }
+            }
+        }
+
+        document.getElementById('add-chapter').addEventListener('click', function() {
             const chaptersDiv = document.getElementById('chapters');
-            const chapterCount = document.getElementsByClassName('chapter').length + 1;
-            
             const chapterDiv = document.createElement('div');
-            chapterDiv.className = 'chapter mb-4';
+            chapterDiv.className = 'chapter mb-3';
             chapterDiv.innerHTML = `
-                <div class="mb-3">
-                    <label class="form-label">Chapter ${chapterCount} Title</label>
+                <input type="hidden" name="chapter_id[]" value="">
+                <div class="mb-2">
+                    <label class="form-label">Chapter Title</label>
                     <input type="text" class="form-control" name="chapter_title[]" required>
-                    <input type="hidden" name="chapter_id[]" value="">
                 </div>
-                <div class="mb-3">
-                    <label class="form-label">Chapter ${chapterCount} Content</label>
+                <div class="mb-2">
+                    <label class="form-label">Content</label>
                     <textarea class="form-control" name="chapter_content[]" rows="10" required></textarea>
                 </div>
-                <button type="button" class="btn btn-danger btn-sm mb-3" onclick="this.parentElement.remove()">Remove Chapter</button>
+                <button type="button" class="btn btn-outline-danger btn-sm remove-chapter">
+                    <i class="fas fa-trash"></i> Remove Chapter
+                </button>
             `;
-            
             chaptersDiv.appendChild(chapterDiv);
-        }
+        });
+
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('remove-chapter') || e.target.parentElement.classList.contains('remove-chapter')) {
+                const button = e.target.classList.contains('remove-chapter') ? e.target : e.target.parentElement;
+                button.closest('.chapter').remove();
+            }
+        });
     </script>
 {% endblock %} 

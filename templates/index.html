@@ -5,18 +5,76 @@
 {% block content %}
     <h1 class="mb-4">Welcome to Scribe</h1>
     
-    <form method="GET" action="{{ url_for('index') }}" class="mb-4">
-        <div class="input-group">
-            <input type="text" name="search" class="form-control" placeholder='Search stories... (e.g., title:"title1" by:"user1" tags:"fantasy, adventure")' value="{{ request.args.get('search', '') }}">
-            <button type="submit" class="btn btn-primary">Search</button>
-            {% if request.args.get('search') %}
-                <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">Clear</a>
-            {% endif %}
+    <div class="mb-4">
+        <form method="GET" action="{{ url_for('index') }}" class="mb-4">
+            <div class="input-group">
+                <input type="text" name="search" class="form-control" placeholder='Search stories... (e.g., title:"title1" by:"user1" tags:"fantasy, adventure" rating:"4.5")' value="{{ request.args.get('search', '') }}">
+                <button type="submit" class="btn btn-primary">Search</button>
+                {% if request.args.get('search') or request.args.get('sort') %}
+                    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">Clear All</a>
+                {% endif %}
+                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#filterModal">
+                    <i class="fas fa-filter"></i> Filters
+                    {% if request.args.get('sort') %}
+                        <span class="badge bg-primary ms-1">Active</span>
+                    {% endif %}
+                </button>
+            </div>
+            <small class="text-muted mt-1 d-block">
+                Search modifiers: <code>title:"your title"</code> to search titles, <code>by:"author name"</code> to search by author, <code>tags:"tag1, tag2"</code> to search by multiple tags, <code>rating:"4.5"</code> for exact rating, <code>rating_more_than:"4"</code> for higher ratings, <code>rating_less_than:"3"</code> for lower ratings. You can combine them: <code>title:"title1" by:"user1" tags:"fantasy" rating_more_than:"4"</code>
+            </small>
+        </form>
+    </div>
+
+    <!-- Filter Modal -->
+    <div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="filterModalLabel">Sort Results</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="GET" action="{{ url_for('index') }}" id="sortForm">
+                        <input type="hidden" name="search" value="{{ request.args.get('search', '') }}">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="sort" id="sort_desc" value="desc" {% if request.args.get('sort') == 'desc' %}checked{% endif %}>
+                            <label class="form-check-label" for="sort_desc">Newest First</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="sort" id="sort_asc" value="asc" {% if request.args.get('sort') == 'asc' %}checked{% endif %}>
+                            <label class="form-check-label" for="sort_asc">Oldest First</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="sort" id="sort_words" value="words" {% if request.args.get('sort') == 'words' %}checked{% endif %}>
+                            <label class="form-check-label" for="sort_words">Word Count</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="sort" id="sort_chapters" value="chapters" {% if request.args.get('sort') == 'chapters' %}checked{% endif %}>
+                            <label class="form-check-label" for="sort_chapters">Chapter Count</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="sort" id="sort_rating" value="rating" {% if request.args.get('sort') == 'rating' %}checked{% endif %}>
+                            <label class="form-check-label" for="sort_rating">Rating</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="sort" id="sort_title" value="title" {% if request.args.get('sort') == 'title' %}checked{% endif %}>
+                            <label class="form-check-label" for="sort_title">Alphabetical (Title)</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="sort" id="sort_author" value="author" {% if request.args.get('sort') == 'author' %}checked{% endif %}>
+                            <label class="form-check-label" for="sort_author">Alphabetical (Author)</label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" onclick="removeFilters()">Remove Filters</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="document.getElementById('sortForm').submit()">Apply</button>
+                </div>
+            </div>
         </div>
-        <small class="text-muted mt-1 d-block">
-            Search modifiers: <code>title:"your title"</code> to search titles, <code>by:"author name"</code> to search by author, <code>tags:"tag1, tag2"</code> to search by multiple tags. You can combine them: <code>title:"title1" by:"user1" tags:"fantasy, adventure"</code>
-        </small>
-    </form>
+    </div>
     
     <style>
         .search-help {
@@ -47,6 +105,23 @@
             padding: 20px;
             margin-bottom: 20px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 20px;
+        }
+        .story-card .cover-image {
+            flex: 0 0 128px;
+            height: 200px;
+            overflow: hidden;
+            border-radius: 4px;
+            background: #f8f9fa;
+        }
+        .story-card .cover-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .story-card .content {
+            flex: 1;
         }
         .story-card h2 {
             margin: 0 0 10px 0;
@@ -75,6 +150,22 @@
             color: #666;
             font-size: 0.9rem;
             margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        .story-card .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .story-card .meta-item i {
+            font-size: 0.9rem;
+        }
+        .story-card .meta-dates {
+            display: flex;
+            gap: 15px;
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 5px;
         }
         .story-card .tags {
             margin: 10px 0;
@@ -93,7 +184,7 @@
         }
         .story-card .tag:hover {
             background: #dee2e6;
-            color: #212529;
+            color: #ffc107;
         }
     </style>
     
@@ -101,19 +192,52 @@
         <div class="list-group">
         {% for story in stories %}
                 <div class="story-card">
-                    <h2><a href="{{ url_for('view_story', story_id=story.id) }}">{{ story.title }}</a></h2>
-                    <p class="author">by {{ story.author.username }}</p>
-                    {% if story.tags %}
-                    <div class="tags">
-                        {% for tag in story.tags %}
-                        <a href="{{ url_for('index', search='tags:' + tag.name) }}" class="tag">{{ tag.name }}</a>
-                        {% endfor %}
+                    <div class="cover-image">
+                        {% if story.cover_image %}
+                        <img src="{{ url_for('static', filename=story.cover_image) }}" alt="{{ story.title }} cover">
+                        {% else %}
+                        <div class="d-flex align-items-center justify-content-center h-100 text-muted">
+                            <i class="fas fa-book fa-2x"></i>
+                        </div>
+                        {% endif %}
                     </div>
-                    {% endif %}
-                    <p class="description">{{ story.description }}</p>
-                    <div class="story-meta">
-                        <span class="chapters">{{ story.chapters|length }} chapter{% if story.chapters|length != 1 %}s{% endif %}</span>
-                        <span class="word-count">{{ story.word_count }} words</span>
+                    <div class="content">
+                        <h2><a href="{{ url_for('view_story', story_id=story.id) }}">{{ story.title }}</a></h2>
+                        <p class="author">by {{ story.author.username }}</p>
+                        {% if story.tags %}
+                        <div class="tags">
+                            {% for tag in story.tags %}
+                            <a href="{{ url_for('index', search='tags:"' + tag.name + '"') }}" class="tag">{{ tag.name }}</a>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        <p class="description">{{ story.description }}</p>
+                        <div class="story-meta">
+                            <span class="meta-item">
+                                <i class="fas fa-book-open"></i>
+                                {{ story.chapters|length }} chapter{% if story.chapters|length != 1 %}s{% endif %}
+                            </span>
+                            <span class="meta-item">
+                                <i class="fas fa-file-alt"></i>
+                                {{ story.word_count }} words
+                            </span>
+                            {% if story.ratings %}
+                            <span class="meta-item">
+                                <i class="fas fa-star text-warning"></i>
+                                {{ "%.1f"|format(story.average_rating) }}
+                            </span>
+                            {% endif %}
+                        </div>
+                        <div class="meta-dates">
+                            <span title="Published">
+                                <i class="fas fa-calendar-plus"></i>
+                                {{ story.created_at.strftime('%Y-%m-%d %H:%M') }}
+                            </span>
+                            <span title="Last Updated">
+                                <i class="fas fa-clock"></i>
+                                {{ story.last_updated.strftime('%Y-%m-%d %H:%M') }}
+                            </span>
+                        </div>
                     </div>
                 </div>
             {% endfor %}
@@ -121,4 +245,25 @@
     {% else %}
         <p>No stories yet. Be the first to write one!</p>
     {% endif %}
+
+    <script>
+        document.querySelectorAll('#sortForm input[type="radio"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                document.querySelectorAll('#sortForm input[type="radio"]').forEach(r => {
+                    r.parentElement.classList.remove('active');
+                });
+                this.parentElement.classList.add('active');
+            });
+        });
+
+        function removeFilters() {
+            const searchQuery = document.querySelector('#sortForm input[name="search"]').value;
+            
+            if (searchQuery) {
+                window.location.href = "{{ url_for('index') }}?search=" + encodeURIComponent(searchQuery);
+            } else {
+                window.location.href = "{{ url_for('index') }}";
+            }
+        }
+    </script>
 {% endblock %} 
