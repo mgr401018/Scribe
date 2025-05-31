@@ -123,8 +123,8 @@ def process_cover_image(file, story_id):
     # Create uploads directory if it doesn't exist
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
     
-    # Generate unique filename
-    filename = secure_filename(f"{story_id}_{file.filename}")
+    # Generate filename using only story ID
+    filename = f"{story_id}.jpg"  # Always save as jpg for consistency
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     
     # Open and process image
@@ -160,7 +160,9 @@ def process_cover_image(file, story_id):
 @app.route('/')
 def index():
     search_query = request.args.get('search', '')
-    sort_option = request.args.get('sort', 'desc')  # Default to newest first
+    sort_option = request.args.get('sort')  # Remove default value
+    page = request.args.get('page', 1, type=int)  # Get current page number
+    per_page = 20  # Number of stories per page
     
     if search_query:
         query = Story.query
@@ -335,12 +337,26 @@ def index():
     elif sort_option == 'author':
         # Sort alphabetically by author username
         query = query.join(User).order_by(User.username.asc())
-    else:  # 'desc' or any other value
+    else:  # No sort option specified
         # Default: sort by newest first (id descending)
         query = query.order_by(Story.id.desc())
     
-    stories = query.all()
-    return render_template('index.html', stories=stories)
+    # Get total count for pagination
+    total_stories = query.count()
+    total_pages = (total_stories + per_page - 1) // per_page
+    
+    # Ensure page is within valid range
+    page = max(1, min(page, total_pages)) if total_pages > 0 else 1
+    
+    # Get paginated stories
+    stories = query.offset((page - 1) * per_page).limit(per_page).all()
+    
+    return render_template('index.html', 
+                         stories=stories,
+                         current_page=page,
+                         total_pages=total_pages,
+                         search_query=search_query,
+                         sort_option=sort_option)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -383,25 +399,39 @@ def logout():
 @login_required
 def profile():
     user = current_user
-    stories = Story.query.filter_by(user_id=user.id).order_by(Story.id.desc()).all()
+    page = request.args.get('page', 1, type=int)
+    per_page = 10  # Number of stories per page
     
-    # Calculate statistics
-    total_stories = len(stories)
-    total_words = sum(story.word_count for story in stories)
+    # Get all stories for statistics
+    all_stories = Story.query.filter_by(user_id=user.id).all()
+    
+    # Get paginated stories for display
+    stories_query = Story.query.filter_by(user_id=user.id).order_by(Story.id.desc())
+    total_stories = stories_query.count()
+    total_pages = (total_stories + per_page - 1) // per_page
+    
+    # Ensure page is within valid range
+    page = max(1, min(page, total_pages)) if total_pages > 0 else 1
+    
+    # Get paginated stories
+    stories = stories_query.offset((page - 1) * per_page).limit(per_page).all()
+    
+    # Calculate statistics from all stories
+    total_words = sum(story.word_count for story in all_stories)
     avg_words = total_words / total_stories if total_stories > 0 else 0
     
     # Calculate average rating across all stories
     total_ratings = 0
     rating_count = 0
-    for story in stories:
+    for story in all_stories:
         if story.ratings:
             total_ratings += sum(rating.value for rating in story.ratings)
             rating_count += len(story.ratings)
     avg_rating = total_ratings / rating_count if rating_count > 0 else 0
     
-    # Calculate most used tag
+    # Calculate most used tag from all stories
     tag_counts = {}
-    for story in stories:
+    for story in all_stories:
         for tag in story.tags:
             tag_counts[tag.name] = tag_counts.get(tag.name, 0) + 1
     
@@ -418,7 +448,9 @@ def profile():
                          avg_words=round(avg_words),
                          avg_rating=round(avg_rating, 1),
                          rating_count=rating_count,
-                         most_used_tag=most_used_tag)
+                         most_used_tag=most_used_tag,
+                         current_page=page,
+                         total_pages=total_pages)
 
 @app.route('/edit_bio', methods=['POST'])
 @login_required
@@ -432,25 +464,39 @@ def edit_bio():
 @app.route('/author/<int:user_id>')
 def view_author(user_id):
     user = User.query.get_or_404(user_id)
-    stories = Story.query.filter_by(user_id=user.id).order_by(Story.id.desc()).all()
+    page = request.args.get('page', 1, type=int)
+    per_page = 10  # Number of stories per page
     
-    # Calculate statistics
-    total_stories = len(stories)
-    total_words = sum(story.word_count for story in stories)
+    # Get all stories for statistics
+    all_stories = Story.query.filter_by(user_id=user.id).all()
+    
+    # Get paginated stories for display
+    stories_query = Story.query.filter_by(user_id=user.id).order_by(Story.id.desc())
+    total_stories = stories_query.count()
+    total_pages = (total_stories + per_page - 1) // per_page
+    
+    # Ensure page is within valid range
+    page = max(1, min(page, total_pages)) if total_pages > 0 else 1
+    
+    # Get paginated stories
+    stories = stories_query.offset((page - 1) * per_page).limit(per_page).all()
+    
+    # Calculate statistics from all stories
+    total_words = sum(story.word_count for story in all_stories)
     avg_words = total_words / total_stories if total_stories > 0 else 0
     
     # Calculate average rating across all stories
     total_ratings = 0
     rating_count = 0
-    for story in stories:
+    for story in all_stories:
         if story.ratings:
             total_ratings += sum(rating.value for rating in story.ratings)
             rating_count += len(story.ratings)
     avg_rating = total_ratings / rating_count if rating_count > 0 else 0
     
-    # Calculate most used tag
+    # Calculate most used tag from all stories
     tag_counts = {}
-    for story in stories:
+    for story in all_stories:
         for tag in story.tags:
             tag_counts[tag.name] = tag_counts.get(tag.name, 0) + 1
     
@@ -467,7 +513,9 @@ def view_author(user_id):
                          avg_words=round(avg_words),
                          avg_rating=round(avg_rating, 1),
                          rating_count=rating_count,
-                         most_used_tag=most_used_tag)
+                         most_used_tag=most_used_tag,
+                         current_page=page,
+                         total_pages=total_pages)
 
 @app.route('/write', methods=['GET', 'POST'])
 @login_required

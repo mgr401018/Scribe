@@ -3,6 +3,40 @@
 {% block title %}{{ user.username }}'s Profile{% endblock %}
 
 {% block content %}
+<style>
+    .pagination-controls {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin: 20px 0;
+        align-items: center;
+    }
+    .pagination-controls .btn {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    .pagination-controls .page-selector {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 0.25rem;
+        padding: 0.375rem 0.75rem;
+    }
+    .pagination-controls select {
+        border: none;
+        background: transparent;
+        padding: 0 5px;
+        cursor: pointer;
+        font-size: 0.9rem;
+    }
+    .pagination-controls select:focus {
+        outline: none;
+    }
+</style>
+
 <div class="row">
     <!-- User Statistics -->
     <div class="col-md-4">
@@ -121,6 +155,60 @@
             {% endif %}
         </div>
         {% if stories %}
+            {% if total_pages > 1 %}
+            <div class="pagination-controls">
+                {% if current_user.id == user.id %}
+                    <a href="{{ url_for('profile', page=1) }}" class="btn btn-outline-primary" {% if current_page == 1 %}disabled{% endif %}>
+                        <i class="fas fa-angle-double-left"></i>
+                    </a>
+                    <a href="{{ url_for('profile', page=current_page-1) }}" class="btn btn-outline-primary" {% if current_page == 1 %}disabled{% endif %}>
+                        <i class="fas fa-angle-left"></i>
+                    </a>
+                    <div class="page-selector">
+                        Page
+                        <select onchange="window.location.href=this.value">
+                            {% for p in range(1, total_pages + 1) %}
+                            <option value="{{ url_for('profile', page=p) }}" {% if p == current_page %}selected{% endif %}>
+                                {{ p }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        of {{ total_pages }}
+                    </div>
+                    <a href="{{ url_for('profile', page=current_page+1) }}" class="btn btn-outline-primary" {% if current_page == total_pages %}disabled{% endif %}>
+                        <i class="fas fa-angle-right"></i>
+                    </a>
+                    <a href="{{ url_for('profile', page=total_pages) }}" class="btn btn-outline-primary" {% if current_page == total_pages %}disabled{% endif %}>
+                        <i class="fas fa-angle-double-right"></i>
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('view_author', user_id=user.id, page=1) }}" class="btn btn-outline-primary" {% if current_page == 1 %}disabled{% endif %}>
+                        <i class="fas fa-angle-double-left"></i>
+                    </a>
+                    <a href="{{ url_for('view_author', user_id=user.id, page=current_page-1) }}" class="btn btn-outline-primary" {% if current_page == 1 %}disabled{% endif %}>
+                        <i class="fas fa-angle-left"></i>
+                    </a>
+                    <div class="page-selector">
+                        Page
+                        <select onchange="window.location.href=this.value">
+                            {% for p in range(1, total_pages + 1) %}
+                            <option value="{{ url_for('view_author', user_id=user.id, page=p) }}" {% if p == current_page %}selected{% endif %}>
+                                {{ p }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        of {{ total_pages }}
+                    </div>
+                    <a href="{{ url_for('view_author', user_id=user.id, page=current_page+1) }}" class="btn btn-outline-primary" {% if current_page == total_pages %}disabled{% endif %}>
+                        <i class="fas fa-angle-right"></i>
+                    </a>
+                    <a href="{{ url_for('view_author', user_id=user.id, page=total_pages) }}" class="btn btn-outline-primary" {% if current_page == total_pages %}disabled{% endif %}>
+                        <i class="fas fa-angle-double-right"></i>
+                    </a>
+                {% endif %}
+            </div>
+            {% endif %}
+
             {% for story in stories %}
                 <div class="card mb-3">
                     <div class="card-body">
@@ -152,6 +240,60 @@
                     </div>
                 </div>
             {% endfor %}
+
+            {% if total_pages > 1 %}
+            <div class="pagination-controls">
+                {% if current_user.id == user.id %}
+                    <a href="{{ url_for('profile', page=1) }}" class="btn btn-outline-primary" {% if current_page == 1 %}disabled{% endif %}>
+                        <i class="fas fa-angle-double-left"></i>
+                    </a>
+                    <a href="{{ url_for('profile', page=current_page-1) }}" class="btn btn-outline-primary" {% if current_page == 1 %}disabled{% endif %}>
+                        <i class="fas fa-angle-left"></i>
+                    </a>
+                    <div class="page-selector">
+                        Page
+                        <select onchange="window.location.href=this.value">
+                            {% for p in range(1, total_pages + 1) %}
+                            <option value="{{ url_for('profile', page=p) }}" {% if p == current_page %}selected{% endif %}>
+                                {{ p }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        of {{ total_pages }}
+                    </div>
+                    <a href="{{ url_for('profile', page=current_page+1) }}" class="btn btn-outline-primary" {% if current_page == total_pages %}disabled{% endif %}>
+                        <i class="fas fa-angle-right"></i>
+                    </a>
+                    <a href="{{ url_for('profile', page=total_pages) }}" class="btn btn-outline-primary" {% if current_page == total_pages %}disabled{% endif %}>
+                        <i class="fas fa-angle-double-right"></i>
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('view_author', user_id=user.id, page=1) }}" class="btn btn-outline-primary" {% if current_page == 1 %}disabled{% endif %}>
+                        <i class="fas fa-angle-double-left"></i>
+                    </a>
+                    <a href="{{ url_for('view_author', user_id=user.id, page=current_page-1) }}" class="btn btn-outline-primary" {% if current_page == 1 %}disabled{% endif %}>
+                        <i class="fas fa-angle-left"></i>
+                    </a>
+                    <div class="page-selector">
+                        Page
+                        <select onchange="window.location.href=this.value">
+                            {% for p in range(1, total_pages + 1) %}
+                            <option value="{{ url_for('view_author', user_id=user.id, page=p) }}" {% if p == current_page %}selected{% endif %}>
+                                {{ p }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        of {{ total_pages }}
+                    </div>
+                    <a href="{{ url_for('view_author', user_id=user.id, page=current_page+1) }}" class="btn btn-outline-primary" {% if current_page == total_pages %}disabled{% endif %}>
+                        <i class="fas fa-angle-right"></i>
+                    </a>
+                    <a href="{{ url_for('view_author', user_id=user.id, page=total_pages) }}" class="btn btn-outline-primary" {% if current_page == total_pages %}disabled{% endif %}>
+                        <i class="fas fa-angle-double-right"></i>
+                    </a>
+                {% endif %}
+            </div>
+            {% endif %}
         {% else %}
             <div class="alert alert-info">
                 <i class="fas fa-info-circle"></i> No stories written yet.
