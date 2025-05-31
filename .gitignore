@@ -7,3 +7,10 @@ instance/
 migrations/__pycache__/
 static/uploads/
 todo.txt
+*.tfstate
+*.tfstate.backup
+*.tfvars
+*.tfvars.json
+*.tfvars.json.lock
+.terraform/
+.terraform.lock.hcl
