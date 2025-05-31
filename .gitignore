@@ -6,3 +6,4 @@ instance/
 *.db
 migrations/__pycache__/
 static/uploads/
+todo.txt
