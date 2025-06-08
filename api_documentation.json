@@ -1,0 +1,521 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2024-03-19T12:00:00.000Z",
+  "__export_source": "insomnia.desktop.app:v8",
+  "resources": [
+    {
+      "_id": "wrk_scribe",
+      "parentId": null,
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "name": "Scribe API",
+      "description": "",
+      "scope": "collection",
+      "_type": "workspace"
+    },
+    {
+      "_id": "env_base",
+      "parentId": "wrk_scribe",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "name": "Base Environment",
+      "data": {
+        "base_url": "http://localhost:5000"
+      },
+      "dataPropertyOrder": {
+        "&": ["base_url"]
+      },
+      "color": null,
+      "isPrivate": false,
+      "metaSortKey": 1710849600000,
+      "_type": "environment"
+    },
+    {
+      "_id": "fld_auth",
+      "parentId": "wrk_scribe",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "name": "Authentication",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": -1710849600000,
+      "_type": "request_group"
+    },
+    {
+      "_id": "req_register",
+      "parentId": "fld_auth",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/register",
+      "name": "Register User",
+      "description": "Create a new user account",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/x-www-form-urlencoded",
+        "params": [
+          {
+            "name": "username",
+            "value": "user565",
+            "description": "Username"
+          },
+          {
+            "name": "password",
+            "value": "565",
+            "description": "Password"
+          }
+        ]
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/x-www-form-urlencoded"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    },
+    {
+      "_id": "req_login",
+      "parentId": "fld_auth",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/login",
+      "name": "Login",
+      "description": "Authenticate user",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/x-www-form-urlencoded",
+        "params": [
+          {
+            "name": "username",
+            "value": "user565",
+            "description": "Username"
+          },
+          {
+            "name": "password",
+            "value": "565",
+            "description": "Password"
+          }
+        ]
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/x-www-form-urlencoded"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    },
+    {
+      "_id": "req_logout",
+      "parentId": "fld_auth",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/logout",
+      "name": "Logout",
+      "description": "Logout current user",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    },
+    {
+      "_id": "fld_stories",
+      "parentId": "wrk_scribe",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "name": "Stories",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": -1710849600000,
+      "_type": "request_group"
+    },
+    {
+      "_id": "req_write",
+      "parentId": "fld_stories",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/write",
+      "name": "Create Story",
+      "description": "Create a new story",
+      "method": "POST",
+      "body": {
+        "mimeType": "multipart/form-data",
+        "params": [
+          {
+            "name": "title",
+            "value": "string",
+            "description": "Story title"
+          },
+          {
+            "name": "description",
+            "value": "string",
+            "description": "Story description"
+          },
+          {
+            "name": "tags",
+            "value": "tag1,tag2,tag3",
+            "description": "Comma-separated tags (max 10)"
+          },
+          {
+            "name": "chapter_title[]",
+            "value": "Chapter 1",
+            "description": "Chapter title (can be multiple)"
+          },
+          {
+            "name": "chapter_content[]",
+            "value": "Chapter content",
+            "description": "Chapter content (can be multiple)"
+          },
+          {
+            "name": "cover",
+            "value": "",
+            "description": "Story cover image (optional)",
+            "type": "file"
+          }
+        ]
+      },
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    },
+    {
+      "_id": "req_view_story",
+      "parentId": "fld_stories",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/story/{{ _.story_id }}",
+      "name": "View Story",
+      "description": "View a specific story",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    },
+    {
+      "_id": "req_edit_story",
+      "parentId": "fld_stories",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/story/{{ _.story_id }}/edit",
+      "name": "Edit Story",
+      "description": "Edit an existing story",
+      "method": "POST",
+      "body": {
+        "mimeType": "multipart/form-data",
+        "params": [
+          {
+            "name": "title",
+            "value": "string",
+            "description": "Story title"
+          },
+          {
+            "name": "description",
+            "value": "string",
+            "description": "Story description"
+          },
+          {
+            "name": "tags",
+            "value": "tag1,tag2,tag3",
+            "description": "Comma-separated tags (max 10)"
+          },
+          {
+            "name": "chapter_id[]",
+            "value": "1",
+            "description": "Chapter ID (can be multiple)"
+          },
+          {
+            "name": "chapter_title[]",
+            "value": "Chapter 1",
+            "description": "Chapter title (can be multiple)"
+          },
+          {
+            "name": "chapter_content[]",
+            "value": "Chapter content",
+            "description": "Chapter content (can be multiple)"
+          },
+          {
+            "name": "cover_image",
+            "value": "",
+            "description": "New cover image (optional)",
+            "type": "file"
+          },
+          {
+            "name": "remove_cover",
+            "value": "1",
+            "description": "Set to 1 to remove cover image"
+          }
+        ]
+      },
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    },
+    {
+      "_id": "req_delete_story",
+      "parentId": "fld_stories",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/story/{{ _.story_id }}/delete",
+      "name": "Delete Story",
+      "description": "Delete a story",
+      "method": "POST",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    },
+    {
+      "_id": "fld_search",
+      "parentId": "wrk_scribe",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "name": "Search",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": -1710849600000,
+      "_type": "request_group"
+    },
+    {
+      "_id": "req_search",
+      "parentId": "fld_search",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/",
+      "name": "Search Stories",
+      "description": "Search stories with advanced filters",
+      "method": "GET",
+      "body": {},
+      "parameters": [
+        {
+          "name": "search",
+          "value": "title:\"your title\" by:\"author name\" tags:\"fantasy, adventure\" rating:\"4.5\" rating_more_than:\"3\" rating_less_than:\"5\"",
+          "description": "Search query with modifiers"
+        },
+        {
+          "name": "sort",
+          "value": "newest",
+          "description": "Sort option (newest, oldest, rating)"
+        },
+        {
+          "name": "page",
+          "value": "1",
+          "description": "Page number"
+        }
+      ],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    },
+    {
+      "_id": "fld_profile",
+      "parentId": "wrk_scribe",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "name": "Profile",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": -1710849600000,
+      "_type": "request_group"
+    },
+    {
+      "_id": "req_view_profile",
+      "parentId": "fld_profile",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/profile",
+      "name": "View Profile",
+      "description": "View user profile",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    },
+    {
+      "_id": "req_edit_bio",
+      "parentId": "fld_profile",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/edit_bio",
+      "name": "Edit Bio",
+      "description": "Edit user bio",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/x-www-form-urlencoded",
+        "params": [
+          {
+            "name": "about_me",
+            "value": "string",
+            "description": "User bio"
+          }
+        ]
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/x-www-form-urlencoded"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    },
+    {
+      "_id": "fld_ratings",
+      "parentId": "wrk_scribe",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "name": "Ratings",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": -1710849600000,
+      "_type": "request_group"
+    },
+    {
+      "_id": "req_rate_story",
+      "parentId": "fld_ratings",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/story/{{ _.story_id }}/rate",
+      "name": "Rate Story",
+      "description": "Rate a story (1-5)",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/x-www-form-urlencoded",
+        "params": [
+          {
+            "name": "rating",
+            "value": "5",
+            "description": "Rating value (1-5)"
+          }
+        ]
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/x-www-form-urlencoded"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    },
+    {
+      "_id": "req_remove_rating",
+      "parentId": "fld_ratings",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/story/{{ _.story_id }}/remove_rating",
+      "name": "Remove Rating",
+      "description": "Remove rating from a story",
+      "method": "POST",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    },
+    {
+      "_id": "fld_library",
+      "parentId": "wrk_scribe",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "name": "Library",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": -1710849600000,
+      "_type": "request_group"
+    },
+    {
+      "_id": "req_view_library",
+      "parentId": "fld_library",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/library",
+      "name": "View Library",
+      "description": "View user's saved stories",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    },
+    {
+      "_id": "req_save_story",
+      "parentId": "fld_library",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/save_story/{{ _.story_id }}",
+      "name": "Save Story",
+      "description": "Save a story to user's library",
+      "method": "POST",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    },
+    {
+      "_id": "fld_export",
+      "parentId": "wrk_scribe",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "name": "Export",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": -1710849600000,
+      "_type": "request_group"
+    },
+    {
+      "_id": "req_export_story",
+      "parentId": "fld_export",
+      "modified": 1710849600000,
+      "created": 1710849600000,
+      "url": "{{ _.base_url }}/story/{{ _.story_id }}/download/{{ _.format }}",
+      "name": "Export Story",
+      "description": "Download story in specified format (pdf or epub)",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": -1710849600000,
+      "_type": "request"
+    }
+  ]
+} 
