@@ -19,12 +19,12 @@
                     {% endif %}
                 </div>
                 <div class="content">
-                    <h2><a href="{{ url_for('view_story', story_id=saved.story.id) }}">{{ saved.story.title }}</a></h2>
+                    <h2><a href="{{ url_for('stories.view_story', story_id=saved.story.id) }}">{{ saved.story.title }}</a></h2>
                     <p class="author">by {{ saved.story.author.username }}</p>
                     {% if saved.story.tags %}
                     <div class="tags">
                         {% for tag in saved.story.tags %}
-                        <a href="{{ url_for('index', search='tags:"' + tag.name + '"') }}" class="tag">{{ tag.name }}</a>
+                        <a href="{{ url_for('search.index', search='tags:"' + tag.name + '"') }}" class="tag">{{ tag.name }}</a>
                         {% endfor %}
                     </div>
                     {% endif %}

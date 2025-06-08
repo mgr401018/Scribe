@@ -4,7 +4,7 @@
 
 {% block content %}
     <div class="mb-4">
-        <a href="{{ url_for('view_story', story_id=story.id) }}" class="btn btn-outline-secondary">
+        <a href="{{ url_for('stories.view_story', story_id=story.id) }}" class="btn btn-outline-secondary">
             <i class="fas fa-arrow-left"></i> Back to Story
         </a>
     </div>
@@ -79,7 +79,7 @@
 
                 <div class="mb-3">
                     <button type="submit" class="btn btn-primary">Save Changes</button>
-                    <a href="{{ url_for('view_story', story_id=story.id) }}" class="btn btn-secondary">Cancel</a>
+                    <a href="{{ url_for('stories.view_story', story_id=story.id) }}" class="btn btn-secondary">Cancel</a>
                 </div>
             </form>
         </div>
@@ -106,7 +106,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <form action="{{ url_for('delete_story', story_id=story.id) }}" method="POST" class="d-inline">
+                    <form action="{{ url_for('stories.delete_story', story_id=story.id) }}" method="POST" class="d-inline">
                         <button type="submit" class="btn btn-danger">Delete Story</button>
                     </form>
                 </div>

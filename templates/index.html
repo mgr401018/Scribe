@@ -6,12 +6,12 @@
     <h1 class="mb-4">Welcome to Scribe</h1>
     
     <div class="mb-4">
-        <form method="GET" action="{{ url_for('index') }}" class="mb-4">
+        <form method="GET" action="{{ url_for('search.index') }}" class="mb-4">
             <div class="input-group">
                 <input type="text" name="search" class="form-control" placeholder='Search stories... (e.g., title:"title1" by:"user1" tags:"fantasy, adventure" rating:"4.5")' value="{{ request.args.get('search', '') }}">
                 <button type="submit" class="btn btn-primary">Search</button>
                 {% if request.args.get('search') or request.args.get('sort') %}
-                    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">Clear All</a>
+                    <a href="{{ url_for('search.index') }}" class="btn btn-outline-secondary">Clear All</a>
                 {% endif %}
                 <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#filterModal">
                     <i class="fas fa-filter"></i> Filters
@@ -35,7 +35,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form method="GET" action="{{ url_for('index') }}" id="sortForm">
+                    <form method="GET" action="{{ url_for('search.index') }}" id="sortForm">
                         <input type="hidden" name="search" value="{{ request.args.get('search', '') }}">
                         <div class="form-check">
                             <input class="form-check-input" type="radio" name="sort" id="sort_desc" value="desc" {% if request.args.get('sort') == 'desc' %}checked{% endif %}>
@@ -229,27 +229,27 @@
     
     {% if total_pages > 1 %}
     <div class="pagination-controls">
-        <a href="{{ url_for('index', page=1, search=search_query, sort=sort_option) }}" class="btn btn-outline-primary" {% if current_page == 1 %}disabled{% endif %}>
+        <a href="{{ url_for('search.index', page=1, search=search_query, sort=sort_option) }}" class="btn btn-outline-primary" {% if current_page == 1 %}disabled{% endif %}>
             <i class="fas fa-angle-double-left"></i>
         </a>
-        <a href="{{ url_for('index', page=current_page-1, search=search_query, sort=sort_option) }}" class="btn btn-outline-primary" {% if current_page == 1 %}disabled{% endif %}>
+        <a href="{{ url_for('search.index', page=current_page-1, search=search_query, sort=sort_option) }}" class="btn btn-outline-primary" {% if current_page == 1 %}disabled{% endif %}>
             <i class="fas fa-angle-left"></i>
         </a>
         <div class="page-selector">
             Page
             <select onchange="window.location.href=this.value">
                 {% for p in range(1, total_pages + 1) %}
-                <option value="{{ url_for('index', page=p, search=search_query, sort=sort_option) }}" {% if p == current_page %}selected{% endif %}>
+                <option value="{{ url_for('search.index', page=p, search=search_query, sort=sort_option) }}" {% if p == current_page %}selected{% endif %}>
                     {{ p }}
                 </option>
                 {% endfor %}
             </select>
             of {{ total_pages }}
         </div>
-        <a href="{{ url_for('index', page=current_page+1, search=search_query, sort=sort_option) }}" class="btn btn-outline-primary" {% if current_page == total_pages %}disabled{% endif %}>
+        <a href="{{ url_for('search.index', page=current_page+1, search=search_query, sort=sort_option) }}" class="btn btn-outline-primary" {% if current_page == total_pages %}disabled{% endif %}>
             <i class="fas fa-angle-right"></i>
         </a>
-        <a href="{{ url_for('index', page=total_pages, search=search_query, sort=sort_option) }}" class="btn btn-outline-primary" {% if current_page == total_pages %}disabled{% endif %}>
+        <a href="{{ url_for('search.index', page=total_pages, search=search_query, sort=sort_option) }}" class="btn btn-outline-primary" {% if current_page == total_pages %}disabled{% endif %}>
             <i class="fas fa-angle-double-right"></i>
         </a>
     </div>
@@ -269,12 +269,12 @@
                         {% endif %}
                     </div>
                     <div class="content">
-                        <h2><a href="{{ url_for('view_story', story_id=story.id) }}">{{ story.title }}</a></h2>
+                        <h2><a href="{{ url_for('stories.view_story', story_id=story.id) }}">{{ story.title }}</a></h2>
                         <p class="author">by {{ story.author.username }}</p>
                         {% if story.tags %}
                         <div class="tags">
                             {% for tag in story.tags %}
-                            <a href="{{ url_for('index', search='tags:"' + tag.name + '"') }}" class="tag">{{ tag.name }}</a>
+                            <a href="{{ url_for('search.index', search='tags:"' + tag.name + '"') }}" class="tag">{{ tag.name }}</a>
                             {% endfor %}
                         </div>
                         {% endif %}
@@ -313,34 +313,6 @@
         <p>No stories yet. Be the first to write one!</p>
     {% endif %}
 
-    {% if total_pages > 1 %}
-    <div class="pagination-controls">
-        <a href="{{ url_for('index', page=1, search=search_query, sort=sort_option) }}" class="btn btn-outline-primary" {% if current_page == 1 %}disabled{% endif %}>
-            <i class="fas fa-angle-double-left"></i>
-        </a>
-        <a href="{{ url_for('index', page=current_page-1, search=search_query, sort=sort_option) }}" class="btn btn-outline-primary" {% if current_page == 1 %}disabled{% endif %}>
-            <i class="fas fa-angle-left"></i>
-        </a>
-        <div class="page-selector">
-            Page
-            <select onchange="window.location.href=this.value">
-                {% for p in range(1, total_pages + 1) %}
-                <option value="{{ url_for('index', page=p, search=search_query, sort=sort_option) }}" {% if p == current_page %}selected{% endif %}>
-                    {{ p }}
-                </option>
-                {% endfor %}
-            </select>
-            of {{ total_pages }}
-        </div>
-        <a href="{{ url_for('index', page=current_page+1, search=search_query, sort=sort_option) }}" class="btn btn-outline-primary" {% if current_page == total_pages %}disabled{% endif %}>
-            <i class="fas fa-angle-right"></i>
-        </a>
-        <a href="{{ url_for('index', page=total_pages, search=search_query, sort=sort_option) }}" class="btn btn-outline-primary" {% if current_page == total_pages %}disabled{% endif %}>
-            <i class="fas fa-angle-double-right"></i>
-        </a>
-    </div>
-    {% endif %}
-
     <script>
         document.querySelectorAll('#sortForm input[type="radio"]').forEach(radio => {
             radio.addEventListener('change', function() {
@@ -352,13 +324,7 @@
         });
 
         function removeFilters() {
-            const searchQuery = document.querySelector('#sortForm input[name="search"]').value;
-            
-            if (searchQuery) {
-                window.location.href = "{{ url_for('index') }}?search=" + encodeURIComponent(searchQuery);
-            } else {
-                window.location.href = "{{ url_for('index') }}";
-            }
+            window.location.href = "{{ url_for('search.index') }}";
         }
     </script>
 {% endblock %} 
