@@ -9,26 +9,26 @@
         }
     </style>
     <div class="mb-4">
-        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+        <a href="{{ url_for('search.index') }}" class="btn btn-outline-secondary">
             <i class="fas fa-arrow-left"></i> Back to Stories
         </a>
         {% if current_user.is_authenticated %}
             {% if current_user.id == story.user_id %}
-                <a href="{{ url_for('profile') }}" class="btn btn-outline-primary">
+                <a href="{{ url_for('profile.view_profile') }}" class="btn btn-outline-primary">
                     <i class="fas fa-user"></i> View Your Profile
                 </a>
             {% else %}
-                <a href="{{ url_for('view_author', user_id=story.author.id) }}" class="btn btn-outline-primary">
+                <a href="{{ url_for('profile.view_author', user_id=story.author.id) }}" class="btn btn-outline-primary">
                     <i class="fas fa-user"></i> View Author
                 </a>
             {% endif %}
         {% else %}
-            <a href="{{ url_for('view_author', user_id=story.author.id) }}" class="btn btn-outline-primary">
+            <a href="{{ url_for('profile.view_author', user_id=story.author.id) }}" class="btn btn-outline-primary">
                 <i class="fas fa-user"></i> View Author
             </a>
         {% endif %}
         {% if current_user.is_authenticated and current_user.id == story.user_id %}
-            <a href="{{ url_for('edit_story', story_id=story.id) }}" class="btn btn-outline-primary">
+            <a href="{{ url_for('stories.edit_story', story_id=story.id) }}" class="btn btn-outline-primary">
                 <i class="fas fa-edit"></i> Edit Story
             </a>
         {% endif %}
@@ -70,7 +70,7 @@
                     {% if story.tags %}
                         <div class="mb-3">
                             {% for tag in story.tags %}
-                                <a href="{{ url_for('index', search='tags:"' + tag.name + '"') }}" class="badge bg-secondary text-decoration-none me-1">
+                                <a href="{{ url_for('search.index', search='tags:"' + tag.name + '"') }}" class="badge bg-secondary text-decoration-none me-1">
                                     {{ tag.name }}
                                 </a>
                             {% endfor %}
@@ -80,7 +80,7 @@
                     {% if current_user.is_authenticated %}
                     <div class="mb-3">
                         <div class="d-inline">
-                            <form action="{{ url_for('save_story', story_id=story.id) }}" method="POST" class="d-inline me-3">
+                            <form action="{{ url_for('library.save_story', story_id=story.id) }}" method="POST" class="d-inline me-3">
                                 <button type="submit" class="btn btn-outline-primary">
                                     <i class="fas fa-bookmark"></i>
                                     {% if story in current_user.saved_stories|map(attribute='story')|list %}
@@ -90,7 +90,7 @@
                                     {% endif %}
                                 </button>
                             </form>
-                            <form action="{{ url_for('rate_story', story_id=story.id) }}" method="POST" class="d-inline">
+                            <form action="{{ url_for('stories.rate_story', story_id=story.id) }}" method="POST" class="d-inline">
                                 <div class="btn-group" role="group">
                                     {% for i in range(1, 6) %}
                                         <input type="radio" class="btn-check" name="rating" id="rating{{ i }}" value="{{ i }}" 
@@ -103,7 +103,7 @@
                                 <button type="submit" class="btn btn-sm btn-primary ms-2">Rate</button>
                             </form>
                             {% if current_user_rating %}
-                            <form action="{{ url_for('remove_rating', story_id=story.id) }}" method="POST" class="d-inline ms-2">
+                            <form action="{{ url_for('stories.remove_rating', story_id=story.id) }}" method="POST" class="d-inline ms-2">
                                 <button type="submit" class="btn btn-sm btn-outline-danger">
                                     <i class="fas fa-times"></i> Remove Rating
                                 </button>
@@ -153,10 +153,10 @@
             
             {% if current_user.is_authenticated %}
                 <div class="btn-group mt-4" role="group">
-                    <a href="{{ url_for('download_story', story_id=story.id, format='pdf') }}" class="btn btn-outline-primary">
+                    <a href="{{ url_for('stories.download_story', story_id=story.id, format='pdf') }}" class="btn btn-outline-primary">
                         <i class="fas fa-file-pdf"></i> Download PDF
                     </a>
-                    <a href="{{ url_for('download_story', story_id=story.id, format='epub') }}" class="btn btn-outline-secondary">
+                    <a href="{{ url_for('stories.download_story', story_id=story.id, format='epub') }}" class="btn btn-outline-secondary">
                         <i class="fas fa-book"></i> Download EPUB
                     </a>
                 </div>

@@ -7,3 +7,4 @@ instance/
 migrations/__pycache__/
 static/uploads/
 todo.txt
+.terraform/
