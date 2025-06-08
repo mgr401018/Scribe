@@ -5,24 +5,26 @@ services:
       - "5000:5000"
     volumes:
       - .:/app
+      - ./templates:/app/templates
+      - ./static:/app/static
+      - ./static/uploads:/app/static/uploads
     environment:
       - FLASK_APP=app.py
-      - FLASK_ENV=development
+      - FLASK_DEBUG=1
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/scribe
     depends_on:
-      db:
-        condition: service_healthy
+      - db
 
   db:
     image: postgres:15
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_USER=postgres
-      - POSTGRES_DB=scribe
     ports:
       - "5434:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=scribe
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s

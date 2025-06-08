@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request
-from models import Story, User, Chapter, Tag, Rating, db, story_tags
-from utils import clean_tag
+from app.models import Story, User, Chapter, Tag, Rating, db, story_tags
+from app.utils import clean_tag
 
 search = Blueprint('search', __name__)
 

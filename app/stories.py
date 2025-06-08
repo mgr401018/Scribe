@@ -12,8 +12,8 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from ebooklib import epub
 from PIL import Image
-from models import db, Story, Chapter, Tag, Rating
-from utils import clean_tag, allowed_file, process_cover_image
+from app.models import db, Story, Chapter, Tag, Rating
+from app.utils import clean_tag, allowed_file, process_cover_image
 
 stories = Blueprint('stories', __name__)
 
