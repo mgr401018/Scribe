@@ -89,14 +89,15 @@ python app.py
 
 ```
 scribe/
-├── app.py              # Main application file
-├── requirements.txt    # Python dependencies
-├── Dockerfile         # Docker configuration
-├── docker-compose.yml # Docker Compose configuration
-├── app/               # Code for most functionalities
-├── tests/             # Pytest unit tests
-├── templates/         # HTML templates
-└── migrations/        # Database migrations
+├── app.py                  # Main application file
+├── requirements.txt        # Python dependencies
+├── api_documentation.json  # API documentation (for Postman/Insomnia) 
+├── Dockerfile              # Docker configuration
+├── docker-compose.yml      # Docker Compose configuration
+├── app/                    # Most functionality implementations
+├── tests/                  # Pytest unit tests
+├── templates/              # HTML templates
+└── migrations/             # Database migrations
 ```
 
 ## Dependencies
