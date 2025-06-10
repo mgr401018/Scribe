@@ -25,6 +25,7 @@ Scribe is a web-based story writing and sharing platform built with Flask. It al
 - "Uploaded" and "Last Updated" dates
 - User Library and Story Saving
 - Pagination (we no longer load more than 20 stories on homepage at a time (10 for user pages))
+- Unit tests
 
 ## Prerequisites
 
@@ -92,6 +93,8 @@ scribe/
 ├── requirements.txt    # Python dependencies
 ├── Dockerfile         # Docker configuration
 ├── docker-compose.yml # Docker Compose configuration
+├── app/               # Code for most functionalities
+├── tests/             # Pytest unit tests
 ├── templates/         # HTML templates
 └── migrations/        # Database migrations
 ```
@@ -106,3 +109,4 @@ scribe/
 - python-dotenv - Environment variable management
 - Werkzeug - WSGI utilities
 - SQLAlchemy - SQL toolkit
+- Pytest - Testing
