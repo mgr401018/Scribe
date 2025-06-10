@@ -1,0 +1,334 @@
+Scribe - Feature Documentation
+============================
+
+This document provides a detailed explanation of all features implemented in the Scribe platform and how they work.
+
+1. User Authentication
+---------------------
+Implementation: app/auth.py
+- Registration: Users can create accounts with username and password
+- Login: Secure authentication using Flask-Login
+- Logout: Session termination
+- Password Security: Passwords are hashed using Werkzeug's security functions
+- User Model: Defined in models.py with UserMixin for Flask-Login integration
+Implementation Details: Authentication is handled through Flask-Login, with password hashing using Werkzeug's security functions. User sessions are managed using Flask's session management system, and all authentication routes are protected against attacks.
+
+2. Story Management
+------------------
+Implementation: app/stories.py
+- Story Creation:
+  * Users can create stories with title, description, and cover image
+  * Support for multiple chapters
+  * Tag system (up to 10 tags per story)
+  * Cover image upload with validation and processing
+  * Automatic timestamp tracking (created_at, last_updated)
+
+- Story Editing:
+  * Full story content editing
+  * Chapter management (add/edit/delete)
+  * Cover image management
+  * Tag management
+  * Last updated timestamp tracking
+
+- Story Viewing:
+  * Public access to all stories
+  * Chapter-based reading experience
+  * Word count calculation
+  * Rating display
+  * Author information
+Implementation Details: Stories are stored in the PostgreSQL database using SQLAlchemy ORM. File uploads are handled through Flask's file handling system, with images processed using Pillow. All story operations are performed through SQLAlchemy queries and transactions.
+
+3. Database Integration
+----------------------
+Implementation: app/models.py
+- PostgreSQL Database using SQLAlchemy ORM
+- Models:
+  * User: User accounts and authentication
+  * Story: Story content and metadata
+  * Chapter: Individual story chapters
+  * Tag: Story categorization
+  * Rating: User ratings for stories
+  * SavedStory: User's saved stories
+Implementation Details: The database is implemented using SQLAlchemy ORM with PostgreSQL as the backend. All database operations are performed through SQLAlchemy's query interface, with proper relationship management and cascading deletes where appropriate.
+
+4. Search and Advanced Search
+----------------------------
+Implementation: app/search.py
+- Search Features:
+  * Title search: title:"your title"
+  * Author search: by:"author name"
+  * Tag search: tags:"tag1, tag2"
+  * Combined search: title:"title1" by:"user1" tags:"fantasy, adventure"
+- Search Filters:
+  * Date-based filtering
+  * Rating-based filtering
+  * Tag-based filtering
+Implementation Details: Search is implemented using SQLAlchemy's query builder, with dynamic query construction based on search parameters. The search parser breaks down search queries into components and builds appropriate database queries with filters and joins.
+
+5. User Profiles and Statistics
+------------------------------
+Implementation: app/profile.py
+- Profile Features:
+  * User information display
+  * Story statistics
+  * Writing history
+  * Rating history
+  * Saved stories list
+Implementation Details: Profile data is gathered through SQLAlchemy queries that aggregate user data, story statistics, and activity history. The data is processed and formatted for display using Flask's templating system.
+
+6. Story Ratings
+---------------
+Implementation: app/stories.py
+- Rating System:
+  * 1-5 star rating system
+  * One rating per user per story
+  * Average rating calculation
+  * Rating modification and removal
+Implementation Details: Ratings are stored in a separate table with unique constraints to ensure one rating per user per story. Average ratings are calculated using SQLAlchemy's aggregation functions, and rating updates are handled through database transactions.
+
+7. Story Covers
+--------------
+Implementation: app/utils.py
+- Cover Image Features:
+  * Image upload support
+  * File type validation
+  * Image processing and resizing
+  * Secure file storage
+  * Cover image display in story listings
+Implementation Details: Cover images are processed using Pillow for resizing and format conversion, stored in the filesystem with secure filenames, and referenced in the database. File uploads are validated for type and size before processing.
+
+8. User Library
+--------------
+Implementation: app/library.py
+- Library Features:
+  * Save stories to personal library
+  * Remove stories from library
+  * View saved stories
+  * Library organization
+Implementation Details: The library system uses a many-to-many relationship table (SavedStory) to track user-story associations. Library operations are implemented through SQLAlchemy queries with proper relationship management.
+
+9. Export Features
+-----------------
+Implementation: app/stories.py
+- Export Formats:
+  * PDF export with proper formatting
+  * EPUB export for e-readers
+  * Chapter organization in exports
+  * Cover image inclusion
+Implementation Details: PDF generation is implemented using ReportLab, while EPUB creation uses EbookLib. Both export types process the story content, format it appropriately, and generate downloadable files with proper metadata and styling.
+
+10. Pagination
+-------------
+Implementation: app/search.py
+- Pagination Features:
+  * 20 stories per page on homepage
+  * 10 stories per page on user pages
+  * Page navigation
+  * Efficient database queries
+Implementation Details: Pagination is implemented using SQLAlchemy's limit and offset functions, with efficient querying to only fetch the required records. Page calculations are handled server-side to ensure proper navigation.
+
+11. Security Features
+--------------------
+Implementation: app/auth.py and app/utils.py
+- Security Measures:
+  * Password hashing
+  * File upload validation
+  * User authentication checks
+  * CSRF protection
+  * Secure session management
+Implementation Details: Security is implemented through multiple layers: Werkzeug for password hashing, Flask-Login for session management, Flask-WTF for CSRF protection, and custom middleware for file upload validation and user authentication checks.
+
+12. Docker Support
+-----------------
+Implementation: docker-compose.yml and Dockerfile
+- Containerization:
+  * Flask application container
+  * PostgreSQL database container
+  * Environment configuration
+  * Easy deployment
+Implementation Details: The application is containerized using Docker, with separate containers for the Flask application and PostgreSQL database. Docker Compose manages the container orchestration, environment variables, and networking between containers.
+
+Technical Implementation Details
+------------------------------
+1. Database Schema:
+   - User-Story relationship: One-to-Many
+   - Story-Chapter relationship: One-to-Many
+   - Story-Tag relationship: Many-to-Many
+   - User-Rating relationship: One-to-Many
+   - User-SavedStory relationship: Many-to-Many
+
+2. File Structure:
+   - app/: Main application code
+   - templates/: HTML templates
+   - static/: Static files (images, CSS, JS)
+   - migrations/: Database migrations
+
+3. Key Dependencies:
+   - Flask: Web framework
+   - SQLAlchemy: Database ORM
+   - Flask-Login: Authentication
+   - ReportLab: PDF generation
+   - EbookLib: EPUB generation
+   - Pillow: Image processing
+
+4. API Endpoints:
+   - /write: Story creation
+   - /story/<id>: Story viewing
+   - /story/<id>/edit: Story editing
+   - /story/<id>/rate: Rating management
+   - /story/<id>/download: Story export
+   - /profile: User profile
+   - /library: User's saved stories
+   - /search: Story search
+
+Database Models
+--------------
+1. User Model
+------------
+class User(UserMixin, db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    password_hash = db.Column(db.String(512))
+    about_me = db.Column(db.Text, nullable=True)
+    stories = db.relationship('Story', backref='author', lazy=True)
+
+Fields:
+- id: Integer, primary key, auto-incrementing
+- username: String(80), unique identifier for the user, cannot be null
+- password_hash: String(512), stores the hashed password
+- about_me: Text, optional user biography
+- stories: Relationship to Story model, one-to-many
+
+2. Story Model
+-------------
+class Story(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    cover_image = db.Column(db.String(255), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    last_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    chapters = db.relationship('Chapter', backref='story', lazy=True, order_by='Chapter.chapter_number')
+    ratings = db.relationship('Rating', backref='story', lazy=True)
+    saved_by = db.relationship('SavedStory', backref='story', lazy=True)
+
+Fields:
+- id: Integer, primary key, auto-incrementing
+- title: String(100), story title, cannot be null
+- description: Text, optional story description
+- user_id: Integer, foreign key to User model, cannot be null
+- cover_image: String(255), path to cover image file, optional
+- created_at: DateTime, automatically set to current time on creation
+- last_updated: DateTime, automatically updated when story is modified
+- chapters: Relationship to Chapter model, one-to-many, ordered by chapter number
+- ratings: Relationship to Rating model, one-to-many
+- saved_by: Relationship to SavedStory model, one-to-many
+
+3. Chapter Model
+---------------
+class Chapter(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    chapter_number = db.Column(db.Integer, nullable=False)
+    story_id = db.Column(db.Integer, db.ForeignKey('story.id'), nullable=False)
+
+Fields:
+- id: Integer, primary key, auto-incrementing
+- title: String(100), chapter title, cannot be null
+- content: Text, chapter content, cannot be null
+- chapter_number: Integer, position of chapter in story, cannot be null
+- story_id: Integer, foreign key to Story model, cannot be null
+
+4. Tag Model
+-----------
+class Tag(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), unique=True, nullable=False)
+    stories = db.relationship('Story', secondary=story_tags, backref=db.backref('tags', lazy=True))
+
+Fields:
+- id: Integer, primary key, auto-incrementing
+- name: String(50), unique tag name, cannot be null
+- stories: Many-to-many relationship with Story model through story_tags table
+
+5. Rating Model
+--------------
+class Rating(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    story_id = db.Column(db.Integer, db.ForeignKey('story.id'), nullable=False)
+    value = db.Column(db.Integer, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    user = db.relationship('User', backref=db.backref('ratings', lazy=True))
+    __table_args__ = (db.UniqueConstraint('user_id', 'story_id', name='unique_user_story_rating'),)
+
+Fields:
+- id: Integer, primary key, auto-incrementing
+- user_id: Integer, foreign key to User model, cannot be null
+- story_id: Integer, foreign key to Story model, cannot be null
+- value: Integer, rating value (1-5), cannot be null
+- created_at: DateTime, automatically set to current time on creation
+- user: Relationship to User model, many-to-one
+- Unique constraint on (user_id, story_id) to ensure one rating per user per story
+
+6. SavedStory Model
+------------------
+class SavedStory(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    story_id = db.Column(db.Integer, db.ForeignKey('story.id'), nullable=False)
+    saved_at = db.Column(db.DateTime, default=datetime.utcnow)
+    user = db.relationship('User', backref=db.backref('saved_stories', lazy=True))
+    __table_args__ = (db.UniqueConstraint('user_id', 'story_id', name='unique_saved_story'),)
+
+Fields:
+- id: Integer, primary key, auto-incrementing
+- user_id: Integer, foreign key to User model, cannot be null
+- story_id: Integer, foreign key to Story model, cannot be null
+- saved_at: DateTime, automatically set to current time when story is saved
+- user: Relationship to User model, many-to-one
+- Unique constraint on (user_id, story_id) to prevent duplicate saves
+
+7. Association Tables
+--------------------
+story_tags = db.Table('story_tags',
+    db.Column('story_id', db.Integer, db.ForeignKey('story.id'), primary_key=True),
+    db.Column('tag_id', db.Integer, db.ForeignKey('tag.id'), primary_key=True)
+)
+
+Fields:
+- story_id: Integer, foreign key to Story model, part of composite primary key
+- tag_id: Integer, foreign key to Tag model, part of composite primary key
+
+Relationships:
+-------------
+1. User -> Story: One-to-Many
+   - A user can have multiple stories
+   - Each story belongs to one user
+
+2. Story -> Chapter: One-to-Many
+   - A story can have multiple chapters
+   - Each chapter belongs to one story
+
+3. Story -> Tag: Many-to-Many
+   - A story can have multiple tags
+   - A tag can be associated with multiple stories
+   - Implemented through story_tags association table
+
+4. User -> Rating: One-to-Many
+   - A user can rate multiple stories
+   - Each rating belongs to one user
+
+5. Story -> Rating: One-to-Many
+   - A story can have multiple ratings
+   - Each rating belongs to one story
+
+6. User -> SavedStory: One-to-Many
+   - A user can save multiple stories
+   - Each saved story entry belongs to one user
+
+7. Story -> SavedStory: One-to-Many
+   - A story can be saved by multiple users
+   - Each saved story entry references one story 
